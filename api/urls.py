@@ -3,5 +3,5 @@ from django.urls import path, include
 from api import views
 
 urlpatterns = [
-    path('', views.telegram_request)
+    path('', views.process_telegram_request)
 ]
