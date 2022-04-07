@@ -32,14 +32,11 @@ class PipelineElement:
     def send_error_message(self, system_error, user_error, context):
         if system_error:
             logging.error(system_error)
-        if user_error:
-            print(user_error)
-        #self.TELEGRAM_CLIENT.sendMessage(chat_id=(None, context['chat_id']), text=(None, user_error))
+        self.TELEGRAM_CLIENT.sendMessage(chat_id=(None, context['chat_id']), text=(None, user_error))
 
     def send_pre_message(self, context):
         if self.pre_message is not None:
-            print(self.pre_message)
-            #self.TELEGRAM_CLIENT.sendMessage(chat_id=(None, context['chat_id']), text=(None, self.pre_message))
+            self.TELEGRAM_CLIENT.sendMessage(chat_id=(None, context['chat_id']), text=(None, self.pre_message))
 
     def run(self, data, context):
         return self.processor(data, context)
