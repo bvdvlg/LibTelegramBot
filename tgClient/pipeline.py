@@ -104,7 +104,7 @@ class UserSessionPipeline:
         next_el = self.pipeline[self.index]
 
         validation = next_el.validate(data)
-        is_success = next_el.run(data, self.context)
+        is_success = False if not validation['is_valid'] else next_el.run(data, self.context)
         if validation['is_valid'] and is_success:
             next_el.send_after_message(self.context)
             self.index += 1

@@ -4,8 +4,7 @@ def qr_code_processor(data, context):
 
 
 def telephone_number_processor(data, context):
-    if context.get('telephone_number'):
-        return True
+    print("Telephone number therated")
     return False
 
 
