@@ -14,11 +14,10 @@ class PipelineElement:
     def fromdict(cls, dct):
         return cls(**dct)
 
-    def __init__(self, data_type, processor, validator=None, sys_error_message=None, usr_error_message=None, previous_message=None, after_message=None):
+    def __init__(self, data_type, processor, validator=None, error=None, previous_message=None, after_message=None):
         self.data_type = data_type
         self.validator = validator or (lambda data: True)
-        self.sys_error_message = sys_error_message or "Validation is failed {}".format(self.validator)
-        self.usr_error_message = usr_error_message or "Отправленные данные не могут пройти валидацию"
+        self.usr_error_message = error or "Отправленные данные не могут пройти валидацию"
         self.after_message = after_message
         self.processor = processor
         self.pre_message = previous_message
@@ -29,10 +28,8 @@ class PipelineElement:
         if self.after_message:
             self.TELEGRAM_CLIENT.sendMessage(chat_id=(None, context['chat_id']), text=(None, self.after_message))
 
-    def send_error_message(self, system_error, user_error, context):
-        if system_error:
-            logging.error(system_error)
-        self.TELEGRAM_CLIENT.sendMessage(chat_id=(None, context['chat_id']), text=(None, user_error))
+    def send_error_message(self, error, context):
+        self.TELEGRAM_CLIENT.sendMessage(chat_id=(None, context['chat_id']), text=(None, error))
 
     def send_pre_message(self, context):
         if self.pre_message is not None:
@@ -43,11 +40,11 @@ class PipelineElement:
 
     def validate(self, data):
         if not data.get(self.data_type, False):
-            return {"is_valid": False, "sys_error": "Message data type doesn't matches with {}".format(self.data_type), "usr_error": "Получен неверный тип данных, пожалуйста, проверьте корректность отправленных данных"}
+            return {"is_valid": False, "error": "Получен неверный тип данных, пожалуйста, проверьте корректность отправленных данных"}
         if self.validator(data):
-            return {"is_valid": True, "sys_error": None, "usr_error": None}
+            return {"is_valid": True, "error": None}
         else:
-            return {"is_valid": False, "sys_error": self.sys_error_message, "usr_error": self.usr_error_message}
+            return {"is_valid": False, "error": self.usr_error_message}
 
 
 class Pipeline:
@@ -70,7 +67,8 @@ class Pipeline:
                 UsersSesions.user_sessions[data['chat']['id']].start()
                 return True
             else:
-                return True
+                context["error"] = "Команда не распознана"
+                return False
         return cls.fromdict([{"data_type": "text", "processor": default_processor}])
 
     def __init__(self, pipeline=None):
@@ -106,14 +104,16 @@ class UserSessionPipeline:
         next_el = self.pipeline[self.index]
 
         validation = next_el.validate(data)
-        if validation['is_valid'] and next_el.run(data, self.context):
+        is_success = next_el.run(data, self.context)
+        if validation['is_valid'] and is_success:
             next_el.send_after_message(self.context)
             self.index += 1
             if not self.is_finished:
                 self.pipeline[self.index].send_pre_message(self.context)
-        else:
-            if not validation['is_valid']:
-                self.pipeline[self.index].send_error_message(validation['sys_error'], validation['usr_error'], self.context)
+        elif not validation['is_valid']:
+            self.pipeline[self.index].send_error_message(validation['error'], self.context)
+        elif not is_success and self.context.get("error"):
+            self.pipeline[self.index].send_error_message(self.context.get("error"), self.context)
 
 
 class UsersSesions:
