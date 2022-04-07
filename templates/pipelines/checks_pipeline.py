@@ -5,7 +5,7 @@ def qr_code_processor(data, context):
 
 def telephone_number_processor(data, context):
     print("Telephone number therated")
-    return False
+    return True
 
 
 QrProcessorPipeline = [{"data_type": "photo", "processor": qr_code_processor, "previous_message": "Пришлите фото qr-кода из кассового чека", "after_message": "Кассовый чек получен"},
