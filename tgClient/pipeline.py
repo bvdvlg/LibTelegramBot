@@ -27,7 +27,7 @@ class PipelineElement:
 
     def send_after_message(self, context):
         if self.after_message:
-            print(self.after_message)
+            self.TELEGRAM_CLIENT.sendMessage(chat_id=(None, context['chat_id']), text=(None, self.after_message))
 
     def send_error_message(self, system_error, user_error, context):
         if system_error:
