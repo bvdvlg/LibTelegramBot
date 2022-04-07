@@ -2,6 +2,7 @@ from requests import Session
 import helpers
 from functools import partial
 
+
 class TelegramClient:
     BASE_URL = "https://api.telegram.org"
 
