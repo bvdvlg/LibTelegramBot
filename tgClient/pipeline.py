@@ -107,8 +107,8 @@ class UserSessionPipeline:
 
         validation = next_el.validate(data)
         if validation['is_valid'] and next_el.run(data, self.context):
-            self.index += 1
             next_el.send_after_message(self.context)
+            self.index += 1
             if not self.is_finished:
                 self.pipeline[self.index].send_pre_message(self.context)
         else:
